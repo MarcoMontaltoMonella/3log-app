@@ -1,25 +1,43 @@
 import React from 'react';
 import {
-  Image,
-  Platform,
-  ScrollView,
   StyleSheet,
-  Text,
-  TouchableOpacity,
   View,
+  Keyboard
 } from 'react-native';
 import { WebBrowser, MapView } from 'expo';
+import { SearchBar } from 'react-native-elements'
 
 export default class HomeScreen extends React.Component {
 
+  componentDidMount () {
+    this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', this._keyboardDidShow);
+    this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', this._keyboardDidHide);
+  }
   
+  componentWillUnmount () {
+    this.keyboardDidShowListener.remove();
+    this.keyboardDidHideListener.remove();
+  }
+
   static navigationOptions = {
     header: null,
   };
+
+  state = {
+    searchQuery: 'Type Here...',
+  };
   
   render() {
+    const { searchQuery } = this.state;
     return (
       <View style={styles.container}>
+          <SearchBar
+            lightTheme
+            onChangeText={query => { this.setState({ searchQuery: query }); }}
+            onClear={this._handleSearch}
+            placeholder={searchQuery}
+            style={styles.searchBar}
+            />
           <View style={styles.mapContainer} >
             <MapView
               style={styles.mapView}
@@ -35,26 +53,28 @@ export default class HomeScreen extends React.Component {
     );
   }
 
-  _maybeRenderDevelopmentModeWarning() {
-    if (__DEV__) {
-      return (
-        <Text style={styles.developmentModeText}>
-          Dev mode ON
-        </Text>
-      );
-    } else {
-      return (
-        <Text style={styles.developmentModeText}>
-          Dev mode OFF
-        </Text>
-      );
-    }
-  }
-
   _handlePressMe = () => {
     WebBrowser.openBrowserAsync(
       'https://mmmarco.com'
     );
+  };
+
+  _handleSearch = () => {
+    console.log('Typing in search...')
+  };
+
+  _handleSearchConfirm = () => {
+    //  Keyboard.dismiss
+    console.log('Search confirm...')
+  };
+
+
+  _keyboardDidShow () {
+    console.log('Keyboard Shown');
+  };
+
+  _keyboardDidHide () {
+    console.log('Keyboard Hidden ');
   };
 }
 
@@ -65,37 +85,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
   },
-  developmentModeText: {
-    marginBottom: 20,
-    color: 'rgba(0,0,0,0.4)',
-    fontSize: 14,
-    lineHeight: 19,
-    textAlign: 'center',
-  },
   contentContainer: {
     flex: 1,
     paddingTop: 30,
     backgroundColor: 'red'
   },
-  welcomeContainer: {
-    alignItems: 'center',
-    marginTop: 10,
-    marginBottom: 20,
-  },
   mapContainer: {
-    marginTop: 0,
-    marginLeft: 0,
-    marginRight: 0,
     alignItems: 'center',
     flex: 1,
-  },
-  tabBarInfoText: {
-    fontSize: 17,
-    color: 'rgba(96,100,109, 1)',
-    textAlign: 'center',
   },
   mapView: {
     flex: 1,
     ...StyleSheet.absoluteFillObject,
+  },
+  searchBar: {
+    flex: 1,
+    position: 'absolute',
+    marginTop: 30,
   }
 });
