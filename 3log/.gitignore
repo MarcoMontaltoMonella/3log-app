@@ -1,4 +1,3 @@
 node_modules/**/*
-.expo/**/*
 screens/HomeScreen_Original.js
-../.expo/**/*
+yarn.lock
