@@ -1,106 +1,103 @@
-import React from 'react';
-import {
-  StyleSheet,
-  View,
-  Keyboard
-} from 'react-native';
-import { WebBrowser, MapView } from 'expo';
-import { SearchBar } from 'react-native-elements'
+import React from "react";
+import { StyleSheet, View } from "react-native";
+import { MapView, Location, Permissions } from "expo";
 
 export default class HomeScreen extends React.Component {
+  state = {
+    treeMarkers: []
+  };
 
-  componentDidMount () {
-    this.keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', this._keyboardDidShow);
-    this.keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', this._keyboardDidHide);
-  }
-  
-  componentWillUnmount () {
-    this.keyboardDidShowListener.remove();
-    this.keyboardDidHideListener.remove();
+  componentDidMount() {
+    this._getLocationAsync();
   }
 
   static navigationOptions = {
-    header: null,
+    header: null
   };
 
-  state = {
-    searchQuery: 'Type Here...',
+  _getLocationAsync = async () => {
+    let { status } = await Permissions.askAsync(Permissions.LOCATION);
+
+    if (status !== "granted") {
+      console.error("Location permission not granted!");
+      return;
+    }
+
+    let location = await Location.getCurrentPositionAsync({});
+
+    // Extra mockup locations
+    let tandon = (await Location.geocodeAsync("6 Metrotech"))[0];
+    let brc = (await Location.geocodeAsync("25 Jay St."))[0];
+
+    this.setState({
+      location,
+      treeMarkers: {
+        tandon,
+        brc
+      }
+    });
   };
-  
+
   render() {
-    const { searchQuery } = this.state;
+    if (!this.state.location) {
+      return <View />;
+    }
+
     return (
       <View style={styles.container}>
-          <SearchBar
-            lightTheme
-            onChangeText={query => { this.setState({ searchQuery: query }); }}
-            onClear={this._handleSearch}
-            placeholder={searchQuery}
-            style={styles.searchBar}
+        <View style={styles.mapContainer}>
+          <MapView
+            style={styles.mapView}
+            initialRegion={{
+              latitude: this.state.location.coords.latitude,
+              longitude: this.state.location.coords.longitude,
+              latitudeDelta: 0.0922 / 2,
+              longitudeDelta: 0.0421 / 2
+            }}
+          >
+            <MapView.Marker
+              coordinate={this.state.location.coords}
+              title="You are here!"
+              description="Your location"
+              pinColor="blue"
             />
-          <View style={styles.mapContainer} >
-            <MapView
-              style={styles.mapView}
-              initialRegion={{
-                latitude: 40.7128,
-                longitude: -74.0000,
-                latitudeDelta: 0.0922,
-                longitudeDelta: 0.0421,
-              }}>
-            </MapView>
-          </View>
+
+            <MapView.Marker
+              coordinate={this.state.treeMarkers.tandon}
+              title="Tandon School of Engineering"
+              description="NYU Engineering Campus"
+              pinColor="purple"
+            />
+
+            <MapView.Marker
+              coordinate={this.state.treeMarkers.brc}
+              title="Brooklyn Roasting Company"
+              description="Best coffee in Brooklyn"
+              pinColor="brown"
+            />
+          </MapView>
+        </View>
       </View>
     );
   }
-
-  _handlePressMe = () => {
-    WebBrowser.openBrowserAsync(
-      'https://mmmarco.com'
-    );
-  };
-
-  _handleSearch = () => {
-    console.log('Typing in search...')
-  };
-
-  _handleSearchConfirm = () => {
-    //  Keyboard.dismiss
-    console.log('Search confirm...')
-  };
-
-
-  _keyboardDidShow () {
-    console.log('Keyboard Shown');
-  };
-
-  _keyboardDidHide () {
-    console.log('Keyboard Hidden ');
-  };
 }
-
-
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff"
   },
   contentContainer: {
     flex: 1,
     paddingTop: 30,
-    backgroundColor: 'red'
+    backgroundColor: "red"
   },
   mapContainer: {
-    alignItems: 'center',
-    flex: 1,
+    alignItems: "center",
+    flex: 1
   },
   mapView: {
     flex: 1,
-    ...StyleSheet.absoluteFillObject,
-  },
-  searchBar: {
-    flex: 1,
-    position: 'absolute',
-    marginTop: 30,
+    ...StyleSheet.absoluteFillObject
   }
 });
