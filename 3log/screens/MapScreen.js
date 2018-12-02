@@ -1,18 +1,35 @@
 import React from "react";
 import { StyleSheet, View } from "react-native";
-import { MapView, Location, Permissions } from "expo";
+import { MapView, Location, Permissions, AppLoading } from "expo";
 
-export default class HomeScreen extends React.Component {
+export default class MapScreen extends React.Component {
   state = {
-    treeMarkers: []
+    treeMarkers: [],
+    isReady: false
+  };
+
+  static navigationOptions = {
+    header: null
   };
 
   componentDidMount() {
     this._getLocationAsync();
   }
 
-  static navigationOptions = {
-    header: null
+  componentWillMount() {
+    this._setupAsync();
+  }
+
+  _loadAssetsAsync = async () => {
+    await Expo.Asset.loadAsync([
+      require("../assets/images/simple_tree.png"),
+      require("../assets/images/user_location.png")
+    ]);
+  };
+
+  _setupAsync = async () => {
+    await Promise.all([this._loadAssetsAsync()]);
+    this.setState({ isReady: true });
   };
 
   _getLocationAsync = async () => {
@@ -40,7 +57,7 @@ export default class HomeScreen extends React.Component {
 
   render() {
     if (!this.state.location) {
-      return <View />;
+      return <AppLoading />;
     }
 
     return (
@@ -59,21 +76,21 @@ export default class HomeScreen extends React.Component {
               coordinate={this.state.location.coords}
               title="You are here!"
               description="Your location"
-              pinColor="blue"
+              image={require("../assets/images/user_location.png")}
             />
 
             <MapView.Marker
               coordinate={this.state.treeMarkers.tandon}
               title="Tandon School of Engineering"
               description="NYU Engineering Campus"
-              pinColor="purple"
+              image={require("../assets/images/simple_tree.png")}
             />
 
             <MapView.Marker
               coordinate={this.state.treeMarkers.brc}
               title="Brooklyn Roasting Company"
               description="Best coffee in Brooklyn"
-              pinColor="brown"
+              image={require("../assets/images/simple_tree.png")}
             />
           </MapView>
         </View>
