@@ -1,6 +1,14 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import {
+  StyleSheet,
+  View,
+  SafeAreaView,
+  TextInput,
+  Platform,
+  StatusBar
+} from "react-native";
 import { MapView, Location, Permissions, AppLoading } from "expo";
+import Icon from "react-native-vector-icons/Ionicons";
 
 export default class MapScreen extends React.Component {
   state = {
@@ -27,8 +35,15 @@ export default class MapScreen extends React.Component {
     ]);
   };
 
+  _setHeaderHeightAsync = async () => {
+    this.startHeaderHeight = 80;
+    if (Platform.OS == "android") {
+      this.startHeaderHeight = 100 + StatusBar.currentHeight;
+    }
+  };
+
   _setupAsync = async () => {
-    await Promise.all([this._loadAssetsAsync()]);
+    await Promise.all([this._loadAssetsAsync(), this._setHeaderHeightAsync()]);
     this.setState({ isReady: true });
   };
 
@@ -61,7 +76,17 @@ export default class MapScreen extends React.Component {
     }
 
     return (
-      <View style={styles.container}>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.searchContainer}>
+          <View style={styles.searchBar}>
+            <Icon name="ios-search" size={20} style={{ marginRight: 10 }} />
+            <TextInput
+              placeholder="Search here"
+              placeholderTextColor="grey"
+              style={styles.searchBarText}
+            />
+          </View>
+        </View>
         <View style={styles.mapContainer}>
           <MapView
             style={styles.mapView}
@@ -94,7 +119,7 @@ export default class MapScreen extends React.Component {
             />
           </MapView>
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 }
@@ -116,5 +141,31 @@ const styles = StyleSheet.create({
   mapView: {
     flex: 1,
     ...StyleSheet.absoluteFillObject
+  },
+  searchContainer: {
+    flex: 0.07,
+    height: this.startHeaderHeight,
+    backgroundColor: "white",
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd"
+  },
+  searchBar: {
+    flexDirection: "row",
+    padding: 10,
+    backgroundColor: "white",
+    marginHorizontal: 20,
+    shadowOffset: {
+      width: 0,
+      height: 0
+    },
+    shadowColor: "black",
+    shadowOpacity: 0.2,
+    elevation: 1,
+    marginTop: Platform.OS == "android" ? 30 : null
+  },
+  searchBarText: {
+    flex: 1,
+    fontWeight: "700",
+    backgroundColor: "white"
   }
 });
