@@ -9,11 +9,13 @@ import {
 } from "react-native";
 import { MapView, Location, Permissions, AppLoading } from "expo";
 import Icon from "react-native-vector-icons/Ionicons";
+import Labels from "../constants/Labels";
 
 export default class MapScreen extends React.Component {
   state = {
     treeMarkers: [],
-    isReady: false
+    isReady: false,
+    searchText: Labels.SEARCH_DEFAULT
   };
 
   static navigationOptions = {
@@ -45,6 +47,10 @@ export default class MapScreen extends React.Component {
   _setupAsync = async () => {
     await Promise.all([this._loadAssetsAsync(), this._setHeaderHeightAsync()]);
     this.setState({ isReady: true });
+  };
+
+  _performSearch = async () => {
+    console.log(this.state.searchText);
   };
 
   _getLocationAsync = async () => {
@@ -81,9 +87,17 @@ export default class MapScreen extends React.Component {
           <View style={styles.searchBar}>
             <Icon name="ios-search" size={20} style={{ marginRight: 10 }} />
             <TextInput
-              placeholder="Search here"
+              placeholder={this.state.searchText}
               placeholderTextColor="grey"
               style={styles.searchBarText}
+              onChangeText={text => {
+                formattedText = text.trim();
+                if (formattedText === "") {
+                  formattedText = Labels.SEARCH_DEFAULT;
+                }
+                this.setState({ searchText: formattedText });
+              }}
+              onSubmitEditing={this._performSearch}
             />
           </View>
         </View>
