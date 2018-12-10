@@ -9,13 +9,14 @@ import {
 } from "react-native";
 import { MapView, Location, Permissions, AppLoading } from "expo";
 import Icon from "react-native-vector-icons/Ionicons";
-import Labels from "../constants/Labels";
+import Search from "../constants/Search";
 
 export default class MapScreen extends React.Component {
   state = {
     treeMarkers: [],
     isReady: false,
-    searchText: Labels.SEARCH_DEFAULT
+    searchText: Search.SEARCH_TEXT_DEFAULT,
+    region: null
   };
 
   static navigationOptions = {
@@ -50,7 +51,36 @@ export default class MapScreen extends React.Component {
   };
 
   _performSearch = async () => {
-    console.log(this.state.searchText);
+    if (this.state.searchText === Search.SEARCH_TEXT_DEFAULT) {
+      return;
+    }
+    let searchLocation = (await Location.geocodeAsync(
+      this.state.searchText
+    ))[0];
+    if (!searchLocation) {
+      alert("Location not found!");
+      return;
+    }
+    reversedGeoLocation = (await Location.reverseGeocodeAsync(
+      searchLocation
+    ))[0];
+    console.log(reversedGeoLocation);
+    updatedSearchLabel = `${this.state.searchText}, ${
+      reversedGeoLocation.region ? reversedGeoLocation.region : null
+    }, ${
+      reversedGeoLocation.isoCountryCode
+        ? reversedGeoLocation.isoCountryCode
+        : null
+    }`;
+    this._searchInputComponent.setNativeProps({ text: updatedSearchLabel });
+
+    searchLocation = {
+      ...searchLocation,
+      latitudeDelta: Search.LATITUDE_DELTA_DEFAULT,
+      longitudeDelta: Search.LONGITUDE_DELTA_DEFAULT
+    };
+
+    this.setState({ region: searchLocation });
   };
 
   _getLocationAsync = async () => {
@@ -93,22 +123,25 @@ export default class MapScreen extends React.Component {
               onChangeText={text => {
                 formattedText = text.trim();
                 if (formattedText === "") {
-                  formattedText = Labels.SEARCH_DEFAULT;
+                  formattedText = Search.SEARCH_TEXT_DEFAULT;
                 }
                 this.setState({ searchText: formattedText });
               }}
               onSubmitEditing={this._performSearch}
+              clearButtonMode="unless-editing"
+              ref={component => (this._searchInputComponent = component)}
             />
           </View>
         </View>
         <View style={styles.mapContainer}>
           <MapView
             style={styles.mapView}
+            region={this.state.region}
             initialRegion={{
               latitude: this.state.location.coords.latitude,
               longitude: this.state.location.coords.longitude,
-              latitudeDelta: 0.0922 / 2,
-              longitudeDelta: 0.0421 / 2
+              latitudeDelta: Search.LATITUDE_DELTA_DEFAULT,
+              longitudeDelta: Search.LONGITUDE_DELTA_DEFAULT
             }}
           >
             <MapView.Marker
