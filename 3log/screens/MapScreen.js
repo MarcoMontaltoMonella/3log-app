@@ -10,6 +10,7 @@ import {
 import { MapView, Location, Permissions, AppLoading } from "expo";
 import Icon from "react-native-vector-icons/Ionicons";
 import Search from "../constants/Search";
+import Colors from "../constants/Colors";
 
 export default class MapScreen extends React.Component {
   state = {
@@ -194,7 +195,7 @@ const styles = StyleSheet.create({
     height: this.startHeaderHeight,
     backgroundColor: "white",
     borderBottomWidth: 1,
-    borderBottomColor: "#ddd"
+    borderBottomColor: Colors.lightBackground
   },
   searchBar: {
     flexDirection: "row",
