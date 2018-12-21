@@ -11,6 +11,7 @@ import { MapView, Location, Permissions, AppLoading } from "expo";
 import Icon from "react-native-vector-icons/Ionicons";
 import Search from "../constants/Search";
 import Colors from "../constants/Colors";
+import Layout from "../constants/Layout";
 
 export default class MapScreen extends React.Component {
   state = {
@@ -95,13 +96,13 @@ export default class MapScreen extends React.Component {
     let location = await Location.getCurrentPositionAsync({});
 
     // Extra mockup locations
-    let tandon = (await Location.geocodeAsync("6 Metrotech"))[0];
+    let bwm = (await Location.geocodeAsync("Brooklyn War Memorial"))[0];
     let brc = (await Location.geocodeAsync("25 Jay St."))[0];
 
     this.setState({
       location,
       treeMarkers: {
-        tandon,
+        bwm,
         brc
       }
     });
@@ -144,26 +145,29 @@ export default class MapScreen extends React.Component {
               latitudeDelta: Search.LATITUDE_DELTA_DEFAULT,
               longitudeDelta: Search.LONGITUDE_DELTA_DEFAULT
             }}
+            onRegionChange={region => {
+              console.log(region);
+            }}
           >
             <MapView.Marker
-              coordinate={this.state.location.coords}
-              title="You are here!"
-              description="Your location"
-              image={require("../assets/images/user_location.png")}
-            />
-
-            <MapView.Marker
-              coordinate={this.state.treeMarkers.tandon}
-              title="Tandon School of Engineering"
-              description="NYU Engineering Campus"
-              image={require("../assets/images/simple_tree.png")}
+              coordinate={this.state.treeMarkers.bwm}
+              title="Brooklyn War Memorial"
+              description="WW2 granite and limestone memorial in Cadman Plaza."
+              image={require("../assets/images/tree-1.png")}
             />
 
             <MapView.Marker
               coordinate={this.state.treeMarkers.brc}
               title="Brooklyn Roasting Company"
               description="Best coffee in Brooklyn"
-              image={require("../assets/images/simple_tree.png")}
+              image={require("../assets/images/tree-2.png")}
+            />
+
+            <MapView.Marker
+              coordinate={this.state.location.coords}
+              title="You are here!"
+              description="Your location"
+              image={require("../assets/images/user_location.png")}
             />
           </MapView>
         </View>
@@ -188,14 +192,17 @@ const styles = StyleSheet.create({
   },
   mapView: {
     flex: 1,
-    ...StyleSheet.absoluteFillObject
+    ...StyleSheet.absoluteFillObject,
+    zIndex: -1
   },
   searchContainer: {
     flex: 0.07,
     height: this.startHeaderHeight,
-    backgroundColor: "white",
-    borderBottomWidth: 1,
-    borderBottomColor: Colors.lightBackground
+    backgroundColor: "transparent",
+    position: "absolute",
+    marginTop: 40,
+    width: Layout.window.width,
+    zIndex: 1
   },
   searchBar: {
     flexDirection: "row",
