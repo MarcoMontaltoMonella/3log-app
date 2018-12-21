@@ -5,12 +5,13 @@ import {
   SafeAreaView,
   TextInput,
   Platform,
-  StatusBar
+  StatusBar,
+  Image
 } from "react-native";
 import { MapView, Location, Permissions, AppLoading } from "expo";
 import Icon from "react-native-vector-icons/Ionicons";
 import Search from "../constants/Search";
-import Colors from "../constants/Colors";
+import APIs from "../constants/APIs";
 import Layout from "../constants/Layout";
 
 export default class MapScreen extends React.Component {
@@ -18,7 +19,8 @@ export default class MapScreen extends React.Component {
     treeMarkers: [],
     isReady: false,
     searchText: Search.SEARCH_TEXT_DEFAULT,
-    region: null
+    region: null,
+    treeIcons: []
   };
 
   static navigationOptions = {
@@ -36,8 +38,29 @@ export default class MapScreen extends React.Component {
   _loadAssetsAsync = async () => {
     await Expo.Asset.loadAsync([
       require("../assets/images/simple_tree.png"),
-      require("../assets/images/user_location.png")
+      require("../assets/images/user_location.png"),
+      require("../assets/images/tree-1.png"),
+      require("../assets/images/tree-2.png"),
+      require("../assets/images/tree-3.png"),
+      require("../assets/images/tree-4.png"),
+      require("../assets/images/tree-5.png"),
+      require("../assets/images/tree-6.png"),
+      require("../assets/images/tree-7.png"),
+      require("../assets/images/tree-8.png"),
+      require("../assets/images/tree-9.png")
     ]);
+    const tree1 = require("../assets/images/tree-1.png");
+    const tree2 = require("../assets/images/tree-2.png");
+    const tree3 = require("../assets/images/tree-3.png");
+    const tree4 = require("../assets/images/tree-4.png");
+    const tree5 = require("../assets/images/tree-5.png");
+    const tree6 = require("../assets/images/tree-6.png");
+    const tree7 = require("../assets/images/tree-7.png");
+    const tree8 = require("../assets/images/tree-8.png");
+    const tree9 = require("../assets/images/tree-9.png");
+    this.setState({
+      treeIcons: [tree1, tree2, tree3, tree4, tree5, tree6, tree7, tree8, tree9]
+    });
   };
 
   _setHeaderHeightAsync = async () => {
@@ -83,6 +106,49 @@ export default class MapScreen extends React.Component {
     };
 
     this.setState({ region: searchLocation });
+
+    // Get trees
+    console.log(
+      `GET Request: ${APIs.treesEndpoint}/near-me?latitude=${
+        searchLocation.latitude
+      }&longitude=${searchLocation.longitude}&radius=1.0`
+    );
+
+    fetch(
+      `${APIs.treesEndpoint}/near-me?latitude=${
+        searchLocation.latitude
+      }&longitude=${searchLocation.longitude}&radius=3.0&limit=100`
+    )
+      .then(response => response.json())
+      .then(responseJson => {
+        if (responseJson.trees) {
+          let i = 1;
+          let trees = responseJson.trees.map(tree => {
+            i = (i % 9) + 1;
+            let treeIcon = this.state.treeIcons[0];
+            let coord = {
+              latitude: tree.location.lat,
+              longitude: tree.location.lon
+            };
+            let spc_common = tree.spc_common;
+            let spc_latin = tree.spc_latin;
+            return spc_common ? (
+              <MapView.Marker
+                key={`${spc_common} - ${tree.tree_id}`}
+                coordinate={coord}
+                title={`${spc_common} - ${tree.tree_id}`}
+                description={spc_latin}
+              >
+                <Image source={treeIcon} style={{ width: 50, height: 50 }} />
+              </MapView.Marker>
+            ) : null;
+          });
+          // console.log(trees);
+          this.setState({ treeMarkers: trees });
+        } else {
+          alert("No tree found!");
+        }
+      });
   };
 
   _getLocationAsync = async () => {
@@ -96,15 +162,12 @@ export default class MapScreen extends React.Component {
     let location = await Location.getCurrentPositionAsync({});
 
     // Extra mockup locations
-    let bwm = (await Location.geocodeAsync("Brooklyn War Memorial"))[0];
-    let brc = (await Location.geocodeAsync("25 Jay St."))[0];
+    // let bwm = (await Location.geocodeAsync("Brooklyn War Memorial"))[0];
+    // let brc = (await Location.geocodeAsync("25 Jay St."))[0];
 
     this.setState({
       location,
-      treeMarkers: {
-        bwm,
-        brc
-      }
+      treeMarkers: []
     });
   };
 
@@ -130,7 +193,7 @@ export default class MapScreen extends React.Component {
                 this.setState({ searchText: formattedText });
               }}
               onSubmitEditing={this._performSearch}
-              clearButtonMode="unless-editing"
+              clearButtonMode="always"
               ref={component => (this._searchInputComponent = component)}
             />
           </View>
@@ -146,29 +209,16 @@ export default class MapScreen extends React.Component {
               longitudeDelta: Search.LONGITUDE_DELTA_DEFAULT
             }}
             onRegionChange={region => {
-              console.log(region);
+              //console.log(region);
             }}
           >
-            <MapView.Marker
-              coordinate={this.state.treeMarkers.bwm}
-              title="Brooklyn War Memorial"
-              description="WW2 granite and limestone memorial in Cadman Plaza."
-              image={require("../assets/images/tree-1.png")}
-            />
-
-            <MapView.Marker
-              coordinate={this.state.treeMarkers.brc}
-              title="Brooklyn Roasting Company"
-              description="Best coffee in Brooklyn"
-              image={require("../assets/images/tree-2.png")}
-            />
-
             <MapView.Marker
               coordinate={this.state.location.coords}
               title="You are here!"
               description="Your location"
               image={require("../assets/images/user_location.png")}
             />
+            {this.state.treeMarkers}
           </MapView>
         </View>
       </SafeAreaView>
